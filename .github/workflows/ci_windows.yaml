@@ -81,11 +81,28 @@ jobs:
 
       - name: Install Static Qt
         run: |
-          aria2c `
-            "https://github.com/wwqgtxx/static-build-qt6/releases/download/qt6_static_64/qt6_${{ matrix.qt_version }}_static_64.7z" `
-            -d "${{ runner.temp }}" `
-            -o "qt.7z"
-          7z x "${{ runner.temp }}/qt.7z" -o"${{ github.workspace }}/.."
+          #aria2c `
+          #  "https://github.com/wwqgtxx/static-build-qt6/releases/download/qt6_static_64/qt6_${{ matrix.qt_version }}_static_64.7z" `
+          #  -d "${{ runner.temp }}" `
+          #  -o "qt.7z"
+          #7z x "${{ runner.temp }}/qt.7z" -o"${{ github.workspace }}/.."
+          #
+          # Clone Qt6 repo
+          cd ..
+          git clone https://code.qt.io/qt/qt5.git -b ${{ matrix.qt_version }}
+          cd qt5
+          perl init-repository -f --module-subset=qtbase,qtsvg,qttools
+          # Create shadow build folder
+          cd ..
+          mkdir qt6_shadow
+          cd qt6_shadow
+          # Setup the compiler
+          cmd.exe /c "call `"C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat`" && set > %temp%\vcvars.txt"
+          Get-Content "$env:temp\vcvars.txt" | Foreach-Object { if ($_ -match "^(.*?)=(.*)$") { Set-Content "env:\$($matches[1])" $matches[2] } }
+          # Configure Qt5
+          ..\qt5\configure.bat -release -static -static-runtime -no-pch -optimize-size -platform win32-msvc -no-sql-db2 -no-sql-ibase -no-sql-mysql -no-sql-oci -no-sql-odbc -no-sql-psql -prefix "..\Qt6_binaries" -no-feature-accessibility -confirm-license
+          cmake --build . --parallel 4
+          cmake --install .
           #
           dir "${{ env.qt_path }}"
           echo "Qt6_DIR=${{ env.qt_path }}" >> $env:GITHUB_ENV
