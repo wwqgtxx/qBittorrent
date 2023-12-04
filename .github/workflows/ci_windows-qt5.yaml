@@ -174,5 +174,5 @@ jobs:
         uses: softprops/action-gh-release@v1
         if: ${{  success() }}
         with:
-          tag_name: qb_v4_5_x
+          tag_name: qb_v4_5_5
           files: qBittorrent-CI_Windows-x64_libtorrent-${{ matrix.libt_version }}_qt-${{ matrix.qt_version }}.7z
